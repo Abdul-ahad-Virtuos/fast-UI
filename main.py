@@ -1,6 +1,7 @@
-from fastapi import FastAPI , Depends
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from models import Product
-from db import session , engine
+from db import session, engine
 import database_models   
 from sqlalchemy.orm import Session
 
@@ -39,6 +40,15 @@ inti_db()
 
 app = FastAPI()
 
+# Add CORS middleware to allow requests from localhost:3000
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    # allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/")
 async def greet():
     return "yay !!"   
@@ -47,43 +57,44 @@ async def greet():
 # @app.get("/products")
 # def get_all_methods():
 
-@app.get("/product")
-def get_all_products(db:Session = Depends(get_db) ):
+@app.get("/products/")
+def get_all_products(db: Session = Depends(get_db)):
     # db = session()
     # db.query()
     db_products = db.query(database_models.Product).all()
     return db_products
 
 
-# @app.get("/product/{id}")
+# @app.get("/products/{id}")
 # def get_products_with_id(id:int):
 #     for product in products:
 #         if product.id == id:
 #             return product
 
-@app.get("/product/{id}")
-def get_products_with_id(id:int , db:Session = Depends(get_db) ):
+@app.get("/products/{id}")
+def get_products_with_id(id: int, db: Session = Depends(get_db)):
     db_product = db.query(database_models.Product).filter(database_models.Product.id == id).first()
     if db_product:
         return db_product
 
-    return "no products for the id"
+    return {"detail": "Product not found"}
 
 
-# @app.post("/product")
+# @app.post("/products/")
 # def add_product(product : Product):
 #     products.append(product)
 #     return product 
 
-@app.post("/product")
-def add_product(product : Product, db:Session = Depends(get_db) ):
+@app.post("/products/")
+def add_product(product: Product, db: Session = Depends(get_db)):
     db.add(database_models.Product(**product.model_dump()))
     db.commit()
     return product 
 
 
 
-# @app.patch("/product")
+
+# @app.patch("/products/")
 # def update_product (id:int , product : Product ,  db:Session = Depends(get_db)):
 #     for i in range(len(products)):
 #         if products[i].id == id :
@@ -92,7 +103,7 @@ def add_product(product : Product, db:Session = Depends(get_db) ):
 #         
 #     return "No Product added "
 
-@app.patch("/product/{id}")
+@app.patch("/products/{id}")
 def update_product(id: int, product: Product, db: Session = Depends(get_db)):
     db_product = db.query(database_models.Product).filter(database_models.Product.id == id).first()
     if db_product:
@@ -105,7 +116,7 @@ def update_product(id: int, product: Product, db: Session = Depends(get_db)):
     return {"message": "Product not found"}
 
 
-# @app.put("/product")
+# @app.put("/products/")
 # def update_product_put(product: Product):
 #     for i in range(len(products)):
 #         if products[i].id == product.id:
@@ -114,7 +125,7 @@ def update_product(id: int, product: Product, db: Session = Depends(get_db)):
 #     
 #     return {"message": "Product not found"}
 
-@app.put("/product/{id}")
+@app.put("/products/{id}")
 def update_product_put(id: int, product: Product, db: Session = Depends(get_db)):
     db_product = db.query(database_models.Product).filter(database_models.Product.id == id).first()
     if db_product:
@@ -127,7 +138,7 @@ def update_product_put(id: int, product: Product, db: Session = Depends(get_db))
     return {"message": "Product not found"}
 
 
-# @app.delete("/product/{id}")
+# @app.delete("/products/{id}")
 # def delete_product(id:int):
 #     for i in range(len(products)) :
 #         if products[i].id == id :
@@ -137,7 +148,7 @@ def update_product_put(id: int, product: Product, db: Session = Depends(get_db))
 #     
 #     return "no product with this id"
 
-@app.delete("/product/{id}")
+@app.delete("/products/{id}")
 def delete_product(id: int, db: Session = Depends(get_db)):
     db_product = db.query(database_models.Product).filter(database_models.Product.id == id).first()
     if db_product:
